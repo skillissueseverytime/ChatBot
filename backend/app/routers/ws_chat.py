@@ -137,7 +137,16 @@ async def websocket_endpoint(websocket: WebSocket, device_id: str):
                 msg_type = data.get("type")
                 
                 if msg_type == "join_queue":
-                    await handle_join_queue(device_id, data, user, db)
+                    try:
+                        await handle_join_queue(device_id, data, user, db)
+                    except Exception as e:
+                        import logging
+                        logger = logging.getLogger(__name__)
+                        logger.error(f"❌ Error in join_queue: {str(e)}", exc_info=True)
+                        await manager.send_personal(device_id, {
+                            "type": "error",
+                            "message": f"Failed to join queue: {str(e)}"
+                        })
                 
                 elif msg_type == "leave_queue":
                     await matching_service.remove_from_queue(
@@ -196,8 +205,13 @@ async def handle_join_queue(
     """Handle queue join request."""
     looking_for = data.get("looking_for", "any").lower()
     
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"🔍 [JOIN_QUEUE] Device: {device_id[:12]}... | Gender: {user.gender_result} | Looking for: {looking_for}")
+    
     # Check cooldown
     if not manager.can_queue(device_id):
+        logger.info(f"⏱️ [JOIN_QUEUE] Cooldown active for {device_id[:12]}...")
         await manager.send_personal(device_id, {
             "type": "error",
             "message": f"Please wait {QUEUE_COOLDOWN_SECONDS} seconds between queue attempts"
@@ -207,6 +221,7 @@ async def handle_join_queue(
     # Check daily limit for specific filters
     if looking_for != "any":
         if user.daily_specific_filter_count >= DAILY_SPECIFIC_FILTER_LIMIT:
+            logger.info(f"🚫 [JOIN_QUEUE] Daily limit reached for {device_id[:12]}...")
             await manager.send_personal(device_id, {
                 "type": "error",
                 "message": "Daily limit for specific filters reached. Try 'Any' or wait until tomorrow."
@@ -218,6 +233,7 @@ async def handle_join_queue(
         db.commit()
     
     # Add to queue
+    logger.info(f"➕ [JOIN_QUEUE] Adding to queue...")
     await matching_service.add_to_queue(
         device_id,
         user.gender_result,
@@ -226,12 +242,14 @@ async def handle_join_queue(
     
     manager.set_queue_cooldown(device_id)
     
+    logger.info(f"✅ [JOIN_QUEUE] Queued successfully")
     await manager.send_personal(device_id, {
         "type": "queued",
         "looking_for": looking_for,
     })
     
     # Try to find immediate match
+    logger.info(f"🔍 [JOIN_QUEUE] Searching for match...")
     match = await matching_service.find_match(
         device_id,
         user.gender_result,
@@ -239,7 +257,11 @@ async def handle_join_queue(
     )
     
     if match:
+        logger.info(f"🎉 [JOIN_QUEUE] MATCH FOUND! Partner: {match['device_id'][:12]}...")
         await establish_match(device_id, match["device_id"], db)
+    else:
+        logger.info(f"⏳ [JOIN_QUEUE] No match yet, waiting in queue...")
+
 
 
 async def establish_match(device_id1: str, device_id2: str, db: Session):
