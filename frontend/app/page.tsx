@@ -21,6 +21,7 @@ interface UserData {
   daily_matches_remaining: number;
   gender: string;
   is_verified: boolean;
+  bio?: string;
 }
 
 interface PartnerData {
@@ -54,10 +55,6 @@ export default function Home() {
       const id = await getDeviceIdHash();
       setDeviceId(id);
 
-      // Store in localStorage for components that need it
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('controlled_anonymity_device_id', id);
-      }
 
       try {
         const user = await register(id) as any;
@@ -238,6 +235,11 @@ export default function Home() {
     showToast('error', message);
   };
 
+  const handleEditProfile = () => {
+    setCurrentScreen('profile');
+  };
+
+
   return (
     <div id="app">
       {currentScreen === 'landing' && (
@@ -246,6 +248,7 @@ export default function Home() {
 
       {currentScreen === 'verification' && (
         <VerificationScreen
+          deviceId={deviceId}
           onBack={handleBackToLanding}
           onVerified={handleVerified}
           onError={handleError}
@@ -254,7 +257,10 @@ export default function Home() {
 
       {currentScreen === 'profile' && (
         <ProfileScreen
-          verifiedGender={verifiedGender}
+          deviceId={deviceId}
+          verifiedGender={verifiedGender || userData?.gender || ''}
+          initialNickname={userData?.nickname || ''}
+          initialBio={userData?.bio || ''}
           onProfileComplete={handleProfileComplete}
           onError={handleError}
         />
@@ -265,6 +271,7 @@ export default function Home() {
           userData={userData}
           onFindMatch={handleFindMatch}
           isLoading={isLoading}
+          onEditProfile={handleEditProfile}
         />
       )}
 

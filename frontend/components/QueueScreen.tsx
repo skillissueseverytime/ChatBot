@@ -9,6 +9,18 @@ interface QueueScreenProps {
 
 export default function QueueScreen({ filter, onCancel }: QueueScreenProps) {
     const [elapsedTime, setElapsedTime] = useState(0);
+    const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
+
+    const quotes = [
+        "🤝 Be respectful and kind to everyone",
+        "🔒 Maintain privacy - don't share personal info",
+        "💬 Have meaningful conversations",
+        "🚫 Report inappropriate behavior immediately",
+        "✨ Treat others how you'd like to be treated",
+        "🛡️ Your safety is our priority",
+        "🌟 Keep conversations positive and friendly",
+        "⚠️ Never share your location or contact details"
+    ];
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -16,6 +28,14 @@ export default function QueueScreen({ filter, onCancel }: QueueScreenProps) {
         }, 1000);
 
         return () => clearInterval(timer);
+    }, []);
+
+    useEffect(() => {
+        const quoteTimer = setInterval(() => {
+            setCurrentQuoteIndex(prev => (prev + 1) % quotes.length);
+        }, 15000); // Change every 15 seconds
+
+        return () => clearInterval(quoteTimer);
     }, []);
 
     const formatTime = (seconds: number) => {
@@ -44,6 +64,10 @@ export default function QueueScreen({ filter, onCancel }: QueueScreenProps) {
 
                 <h2>Finding your match...</h2>
                 <p className="queue-subtitle">Looking for <span>{getFilterLabel()}</span></p>
+
+                <div className="queue-quote" style={{ marginBottom: '2rem' }}>
+                    <p>{quotes[currentQuoteIndex]}</p>
+                </div>
 
                 <div className="queue-stats">
                     <div className="stat">

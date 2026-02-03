@@ -3,14 +3,17 @@
 import { useState } from 'react';
 
 interface ProfileScreenProps {
+    deviceId: string;
     verifiedGender: string;
+    initialNickname?: string;
+    initialBio?: string;
     onProfileComplete: (nickname: string, bio: string) => void;
     onError: (message: string) => void;
 }
 
-export default function ProfileScreen({ verifiedGender, onProfileComplete, onError }: ProfileScreenProps) {
-    const [nickname, setNickname] = useState('');
-    const [bio, setBio] = useState('');
+export default function ProfileScreen({ deviceId, verifiedGender, initialNickname = '', initialBio = '', onProfileComplete, onError }: ProfileScreenProps) {
+    const [nickname, setNickname] = useState(initialNickname);
+    const [bio, setBio] = useState(initialBio);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -24,7 +27,7 @@ export default function ProfileScreen({ verifiedGender, onProfileComplete, onErr
         setIsSubmitting(true);
 
         try {
-            const deviceId = localStorage.getItem('controlled_anonymity_device_id') || '';
+
 
             const response = await fetch('http://localhost:8000/api/auth/profile', {
                 method: 'PUT',

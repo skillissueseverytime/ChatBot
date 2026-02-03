@@ -86,7 +86,6 @@ export default function ChatScreen({ partner, messages, onSendMessage, onLeave, 
                     {messages.map((msg, index) => (
                         <div key={index} className={`message ${msg.type}`}>
                             {msg.content}
-                            <span className="message-time">{msg.timestamp}</span>
                         </div>
                     ))}
                     <div ref={messagesEndRef} />

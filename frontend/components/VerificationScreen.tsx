@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 
 interface VerificationScreenProps {
+    deviceId: string;
     onBack: () => void;
     onVerified: (gender: string) => void;
     onError: (message: string) => void;
 }
 
-export default function VerificationScreen({ onBack, onVerified, onError }: VerificationScreenProps) {
+export default function VerificationScreen({ deviceId, onBack, onVerified, onError }: VerificationScreenProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
@@ -77,8 +78,7 @@ export default function VerificationScreen({ onBack, onVerified, onError }: Veri
 
             if (!blob) throw new Error('Failed to capture image');
 
-            // Get device ID from localStorage
-            const deviceId = localStorage.getItem('controlled_anonymity_device_id') || '';
+            if (!blob) throw new Error('Failed to capture image');
 
             const formData = new FormData();
             formData.append('image', blob, 'selfie.jpg');
