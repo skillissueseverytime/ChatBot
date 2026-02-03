@@ -35,41 +35,20 @@ def verify_gender_from_image(image_bytes: bytes) -> Tuple[Optional[str], Optiona
             tmp.write(image_bytes)
             temp_path = tmp.name
         
-        # Import DeepFace here to avoid loading TensorFlow at startup
-        try:
-            from deepface import DeepFace
-        except ImportError:
-            logger.warning("DeepFace not installed, using mock response")
-            return _mock_gender_detection()
+        # Use custom Gender Model (Local Integration)
+        from app.services.gender_model import gender_model
         
-        # Analyze the image
-        result = DeepFace.analyze(
-            img_path=temp_path,
-            actions=["gender"],
-            enforce_detection=True,
-            detector_backend="opencv"
-        )
+        # predict returns (gender, error_message)
+        gender, error = gender_model.predict(temp_path)
         
-        # DeepFace returns a list when multiple faces detected
-        if isinstance(result, list):
-            result = result[0]
-        
-        gender = result.get("dominant_gender", "Unknown")
-        
-        # Normalize to "Man" or "Woman"
-        if gender.lower() in ["male", "man"]:
-            return "Man", None
-        elif gender.lower() in ["female", "woman"]:
-            return "Woman", None
+        if gender:
+            return gender, None
         else:
-            return None, f"Could not determine gender: {gender}"
+            return None, error or "Could not determine gender."
             
     except Exception as e:
-        error_msg = str(e)
-        if "Face could not be detected" in error_msg:
-            return None, "No face detected. Please ensure your face is clearly visible."
-        logger.error(f"Gender verification error: {error_msg}")
-        return None, f"Verification failed: {error_msg}"
+        logger.error(f"Gender verification error: {str(e)}")
+        return None, f"Verification failed: {str(e)}"
         
     finally:
         # CRITICAL: Always delete the temporary image file
