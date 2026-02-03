@@ -24,11 +24,21 @@ interface ChatScreenProps {
 
 export default function ChatScreen({ partner, messages, onSendMessage, onLeave, onNext, onReport }: ChatScreenProps) {
     const [inputValue, setInputValue] = useState('');
+    const [isTyping, setIsTyping] = useState(false); // Simulate partner typing for UX
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const startTime = useRef(new Date().toLocaleTimeString());
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+
+    // Simple simulation of "Stranger is typing" when a message is received
+    // In a real app, this would be triggered by a WebSocket event
+    useEffect(() => {
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage && lastMessage.type === 'received') {
+            setIsTyping(false);
+        }
     }, [messages]);
 
     const handleSend = () => {
@@ -48,19 +58,16 @@ export default function ChatScreen({ partner, messages, onSendMessage, onLeave, 
             <div className="chat-container">
                 <header className="chat-header">
                     <div className="partner-info">
-                        <span className="partner-avatar">🎭</span>
+                        <div className="partner-avatar-placeholder">🎭</div>
                         <div>
-                            <span className="partner-name">{partner.nickname}</span>
-                            <span className="partner-status">Connected</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span className="partner-name">{partner.nickname}</span>
+                                <span className="chat-badge">Verified</span>
+                            </div>
+                            <span className="partner-status" style={{ color: 'var(--success)', fontSize: '0.75rem' }}>● Online</span>
                         </div>
                     </div>
                     <div className="chat-actions">
-                        <button className="btn-icon btn-danger" title="Report user" onClick={onReport}>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-                                <line x1="4" y1="22" x2="4" y2="15" />
-                            </svg>
-                        </button>
                         <button className="btn-icon" title="Find next match" onClick={onNext}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M23 4v6h-6" />
@@ -68,10 +75,19 @@ export default function ChatScreen({ partner, messages, onSendMessage, onLeave, 
                                 <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
                             </svg>
                         </button>
-                        <button className="btn-icon" title="Leave chat" onClick={onLeave}>
+
+
+                        <button className="btn-icon btn-report" title="Report User" onClick={onReport}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <line x1="18" y1="6" x2="6" y2="18" />
-                                <line x1="6" y1="6" x2="18" y2="18" />
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                            </svg>
+                        </button>
+
+
+                        <button className="btn-icon btn-exit" title="Exit Chat" onClick={onLeave}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M13 16l5-4-5-4M18 12H9" />
+                                <path d="M13 4h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" />
                             </svg>
                         </button>
                     </div>
@@ -83,12 +99,54 @@ export default function ChatScreen({ partner, messages, onSendMessage, onLeave, 
                         <span className="chat-start-time">{startTime.current}</span>
                     </div>
 
-                    {messages.map((msg, index) => (
-                        <div key={index} className={`message ${msg.type}`}>
-                            {msg.content}
-                            <span className="message-time">{msg.timestamp}</span>
+                    {messages.length === 0 && (
+                        <div className="chat-welcome-message">
+                            <p>You're now connected. Say hi 👋</p>
                         </div>
-                    ))}
+                    )}
+
+                    {messages.map((msg, index) => {
+                        // Logic to only show timestamp if it's the first message or a significant gap
+                        // For simplicity in this demo, we'll show it for the very first message and then intermittently
+                        const showTime = index === 0 || index % 5 === 0;
+
+                        return (
+                            <div key={index}
+                                className="message-slide-in"
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: msg.type === 'sent' ? 'flex-end' : 'flex-start',
+                                    marginBottom: '1rem'
+                                }}>
+                                <div className={`chat-bubble ${msg.type}`}>
+                                    {msg.content}
+                                </div>
+                                {showTime && (
+                                    <div className="message-time" style={{
+                                        fontSize: '0.65rem',
+                                        opacity: 0.4,
+                                        marginTop: '4px',
+                                        marginRight: msg.type === 'sent' ? '8px' : '0',
+                                        marginLeft: msg.type === 'received' ? '8px' : '0',
+                                    }}>
+                                        {msg.timestamp}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+
+                    {isTyping && (
+                        <div className="typing-container" style={{ marginBottom: '1rem' }}>
+                            <div className="typing-indicator">
+                                <div className="typing-dot"></div>
+                                <div className="typing-dot"></div>
+                                <div className="typing-dot"></div>
+                            </div>
+                            <span className="typing-text">Stranger is typing...</span>
+                        </div>
+                    )}
                     <div ref={messagesEndRef} />
                 </div>
 
@@ -96,13 +154,17 @@ export default function ChatScreen({ partner, messages, onSendMessage, onLeave, 
                     <input
                         type="text"
                         className="message-input"
-                        placeholder="Type a message..."
+                        placeholder="Say something respectful..."
                         maxLength={1000}
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyPress={handleKeyPress}
                     />
-                    <button className="btn-send" onClick={handleSend}>
+                    <button
+                        className={`btn-send ${inputValue.trim() ? 'btn-send-pulse' : ''}`}
+                        onClick={handleSend}
+                        disabled={!inputValue.trim()}
+                    >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <line x1="22" y1="2" x2="11" y2="13" />
                             <polygon points="22 2 15 22 11 13 2 9 22 2" />
