@@ -83,7 +83,7 @@ export default function VerificationScreen({ onBack, onVerified, onError }: Veri
             const formData = new FormData();
             formData.append('image', blob, 'selfie.jpg');
 
-            const response = await fetch(`https://anonchat-backend-xmqk.onrender.com/api/auth/verify-gender`, {
+           const response = await fetch(`http://localhost:8000/api/auth/verify-gender`, {
                 method: 'POST',
                 headers: {
                     'X-Device-ID': deviceId,
@@ -186,3 +186,4 @@ export default function VerificationScreen({ onBack, onVerified, onError }: Veri
         </section>
     );
 }
+
