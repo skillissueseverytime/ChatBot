@@ -1,3 +1,4 @@
+
 /**
  * API Module - Backend communication
  */
@@ -137,4 +138,3 @@ const WebSocketManager = {
 
 window.API = API;
 window.WebSocketManager = WebSocketManager;
-
