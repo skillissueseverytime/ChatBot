@@ -6,8 +6,8 @@
 
 import { getDeviceId } from './deviceFingerprint';
 
-const BASE_URL = 'https://anonchat-backend-xmqk.onrender.com';
-const WS_URL = 'wss://anonchat-backend-xmqk.onrender.com';
+const BASE_URL = 'http://localhost:8000';
+const WS_URL = 'ws://localhost:8000';
 
 export async function initAPI(id: string) {
     // Deprecated: Device ID is now handled automatically via headers
@@ -193,3 +193,4 @@ export class WebSocketManager {
         this.triggerHandler(type, payload);
     }
 }
+
