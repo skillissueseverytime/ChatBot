@@ -2,8 +2,8 @@
  * API Module - Backend communication
  */
 const API = {
-    BASE_URL: 'http://localhost:8000',
-    WS_URL: 'ws://localhost:8000',
+    BASE_URL: 'https://anonchat-backend-xmqk.onrender.com',
+    WS_URL: 'wss://anonchat-backend-xmqk.onrender.com',
     deviceId: null,
 
     async init() {
