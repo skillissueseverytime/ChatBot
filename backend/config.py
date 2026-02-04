@@ -31,4 +31,5 @@ QUEUE_COOLDOWN_SECONDS = 10
 CORS_ORIGINS = ["*"]
 
 # Demo Mode - Disables ML verification for lightweight deployment
-DEMO_MODE = os.getenv("DEMO_MODE", "False").lower() == "true"
+DEMO_MODE = os.getenv("DEMO_MODE", "True").lower() == "true"
+
